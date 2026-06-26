@@ -82,16 +82,14 @@ Constellation is being built in the open, milestone by milestone.
 | Networking layer            | ✅ Implemented |
 | Raft consensus              | ✅ Implemented |
 | Observability & replay      | ✅ Implemented |
-| Chaos engineering           | 🚧 Next        |
+| Chaos engineering           | ✅ Implemented |
 | Additional protocols        | ⏳ Planned     |
 
-**Observability & time-travel** are built entirely by folding the engine's event stream — no
-counters live in the engine. An `EventRecorder` captures the full history; from it, metrics
-(throughput, loss, delivery ratio), a unified log journal, and distributed traces (causal message
-trees reconstructed from `causedBy` lineage) are derived as pure functions. The lab gains a bottom
-dock — ECharts throughput, a filterable log stream, and a trace waterfall — plus a **timeline
-scrubber**: drag into the past and the topology re-folds to that instant, deterministically, with no
-re-simulation.
+The **chaos framework** schedules faults onto the timeline — crashed nodes, partitions, packet-loss
+storms, latency spikes, and a reproducible "chaos monkey" — sharing the same deterministic clock as
+everything else, so a fault at t=2s recurs identically on every run. Faults surface in the activity
+journal. The lab gains live controls: a packet-loss slider, a chaos-monkey toggle, and per-node
+crash/isolate actions. Partition the Raft leader from the cluster and watch a new term begin.
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable

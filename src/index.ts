@@ -23,5 +23,8 @@ export * from "./protocols/index.js";
 // Observability: recording, metrics, logs, tracing
 export * from "./observability/index.js";
 
+// Chaos engineering
+export * from "./chaos/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";

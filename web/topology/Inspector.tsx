@@ -65,6 +65,9 @@ export function Inspector({ snapshot, selectedId, sim, onClose }: Props): JSX.El
           ⚠ Crash node
         </button>
       )}
+      <button className="btn btn--full" onClick={() => sim.toggleIsolate(node.id)}>
+        {sim.isolated.includes(node.id) ? "⇄ Reconnect node" : "⤫ Isolate from network"}
+      </button>
     </aside>
   );
 }

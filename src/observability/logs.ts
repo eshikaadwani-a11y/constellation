@@ -57,6 +57,11 @@ export function buildJournal(
           type: e.envelope.message.type,
         });
         break;
+      case "action":
+        // Scheduled actions are how chaos faults reach the timeline. Surface
+        // the descriptively-labelled ones; skip the generic default label.
+        if (e.label !== "action") entry = mk(e.seq, e.time, "info", null, e.label);
+        break;
       default:
         break;
     }

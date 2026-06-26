@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   EventRecorder,
   Network,
+  Random,
   Simulation,
   TopologyModel,
   uniformLatency,
@@ -42,6 +43,10 @@ export interface SimController {
   recorder: EventRecorder;
   /** Bumps whenever the recorded history grows; a memo dependency for panels. */
   version: number;
+  // --- chaos ---
+  loss: number;
+  isolated: string[];
+  monkey: boolean;
   play(): void;
   pause(): void;
   toggle(): void;
@@ -54,6 +59,10 @@ export interface SimController {
   scrubTo(time: number): void;
   exitReview(): void;
   stateOf(id: string): unknown;
+  setLoss(rate: number): void;
+  toggleIsolate(id: string): void;
+  reconnectAll(): void;
+  toggleMonkey(): void;
 }
 
 interface Engine {
@@ -61,6 +70,8 @@ interface Engine {
   model: TopologyModel;
   network: Network;
   recorder: EventRecorder;
+  partitions: Map<string, number>;
+  monkeyRng: Random;
   unsubscribe: () => void;
 }
 
@@ -86,6 +97,8 @@ function createEngine(scenarioId: string, nodeCount: number, seed: number): Engi
     model,
     network,
     recorder,
+    partitions: new Map<string, number>(),
+    monkeyRng: new Random(0xc0ffee ^ seed),
     unsubscribe: () => {
       unModel();
       unRec();
@@ -111,14 +124,20 @@ export function useSimulation(initialScenario = "raft"): SimController {
   const [liveSnapshot, setLiveSnapshot] = useState<TopologySnapshot>(EMPTY);
   const [reviewTime, setReviewTime] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
+  const [loss, setLossState] = useState(0);
+  const [isolated, setIsolated] = useState<string[]>([]);
+  const [monkey, setMonkey] = useState(false);
 
   const engineRef = useRef<Engine | null>(null);
   const playingRef = useRef(playing);
   const reviewRef = useRef(reviewTime);
   const speedRef = useRef(speed);
+  const monkeyRef = useRef(monkey);
+  const monkeyNextRef = useRef(0);
   playingRef.current = playing;
   reviewRef.current = reviewTime;
   speedRef.current = speed;
+  monkeyRef.current = monkey;
 
   useEffect(() => {
     engineRef.current?.unsubscribe();
@@ -127,6 +146,10 @@ export function useSimulation(initialScenario = "raft"): SimController {
     setLiveSnapshot(engine.model.snapshot());
     setReviewTime(null);
     setVersion((v) => v + 1);
+    setLossState(0);
+    setIsolated([]);
+    setMonkey(false);
+    monkeyNextRef.current = 0;
     setPlaying(true);
     return () => engine.unsubscribe();
   }, [config]);
@@ -141,6 +164,19 @@ export function useSimulation(initialScenario = "raft"): SimController {
         const virtual = dt * speedRef.current;
         if (virtual > 0) {
           engine.sim.run({ until: engine.sim.now + virtual, maxSteps: 50000 });
+          // Chaos monkey: fail a random live node on a cadence.
+          if (monkeyRef.current) {
+            if (monkeyNextRef.current === 0) monkeyNextRef.current = engine.sim.now + 3000;
+            if (engine.sim.now >= monkeyNextRef.current) {
+              const alive = engine.sim.nodeIds().filter((id) => !engine.sim.isCrashed(id));
+              if (alive.length > 1) {
+                const victim = engine.monkeyRng.pick(alive);
+                engine.sim.crash(victim);
+                engine.sim.scheduleAt(engine.sim.now + 2500, () => engine.sim.restart(victim));
+              }
+              monkeyNextRef.current = engine.sim.now + 3500;
+            }
+          }
           setLiveSnapshot(engine.model.snapshot());
           setVersion((v) => v + 1);
         }
@@ -195,6 +231,39 @@ export function useSimulation(initialScenario = "raft"): SimController {
     setPlaying(true);
   }, []);
 
+  const setLoss = useCallback((rate: number) => {
+    engineRef.current?.network.setLossRate(rate);
+    setLossState(rate);
+  }, []);
+
+  const toggleIsolate = useCallback((id: string) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    setIsolated((prev) => {
+      const existing = engine.partitions.get(id);
+      if (existing !== undefined) {
+        engine.network.heal(existing);
+        engine.partitions.delete(id);
+        return prev.filter((x) => x !== id);
+      }
+      engine.partitions.set(id, engine.network.partition([id]));
+      return [...prev, id];
+    });
+  }, []);
+
+  const reconnectAll = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.network.healAll();
+    engine.partitions.clear();
+    setIsolated([]);
+  }, []);
+
+  const toggleMonkey = useCallback(() => {
+    monkeyNextRef.current = 0;
+    setMonkey((m) => !m);
+  }, []);
+
   const recorder = engineRef.current?.recorder ?? new EventRecorder();
   const displaySnapshot = useMemo(
     () => (reviewTime === null ? liveSnapshot : snapshotAt(recorder, reviewTime)),
@@ -222,6 +291,9 @@ export function useSimulation(initialScenario = "raft"): SimController {
     seed: config.seed,
     recorder,
     version,
+    loss,
+    isolated,
+    monkey,
     play,
     pause: useCallback(() => setPlaying(false), []),
     toggle: useCallback(() => {
@@ -237,5 +309,9 @@ export function useSimulation(initialScenario = "raft"): SimController {
     scrubTo,
     exitReview,
     stateOf: useCallback((id: string) => engineRef.current?.sim.stateOf(id), []),
+    setLoss,
+    toggleIsolate,
+    reconnectAll,
+    toggleMonkey,
   };
 }

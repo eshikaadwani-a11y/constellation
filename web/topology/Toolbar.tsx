@@ -97,6 +97,34 @@ export function Toolbar({ sim }: { sim: SimController }): JSX.Element {
         </label>
       </div>
 
+      <div className="toolbar__group">
+        <label className="toolbar__field">
+          loss
+          <input
+            type="range"
+            min={0}
+            max={50}
+            value={Math.round(sim.loss * 100)}
+            onChange={(e: { target: { value: string } }) =>
+              sim.setLoss(Number(e.target.value) / 100)
+            }
+          />
+          <span className="toolbar__count">{Math.round(sim.loss * 100)}%</span>
+        </label>
+        <button
+          className={`btn ${sim.monkey ? "btn--danger" : ""}`}
+          onClick={sim.toggleMonkey}
+          title="Repeatedly crash random nodes"
+        >
+          🐵 Monkey
+        </button>
+        {sim.isolated.length > 0 && (
+          <button className="btn" onClick={sim.reconnectAll}>
+            ⇄ Reconnect ({sim.isolated.length})
+          </button>
+        )}
+      </div>
+
       <div className="toolbar__stats">
         {stats.map((s) => (
           <div className="toolbar__stat" key={s.label}>
