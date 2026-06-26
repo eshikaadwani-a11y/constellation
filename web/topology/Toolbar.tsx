@@ -3,6 +3,7 @@
  * playback controls, alongside live run statistics.
  */
 import { SCENARIOS, scenarioById } from "../scenarios.js";
+import { ProjectMenu } from "../persistence/ProjectMenu.js";
 import type { SimController } from "./useSimulation.js";
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4, 8];
@@ -124,6 +125,8 @@ export function Toolbar({ sim }: { sim: SimController }): JSX.Element {
           </button>
         )}
       </div>
+
+      <ProjectMenu sim={sim} />
 
       <div className="toolbar__stats">
         {stats.map((s) => (

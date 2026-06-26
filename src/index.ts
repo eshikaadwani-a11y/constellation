@@ -32,5 +32,9 @@ export * from "./tutor/index.js";
 // Cloud infrastructure (scheduler + orchestration control plane)
 export * from "./cloud/index.js";
 
+// Protocol registry + persistence (reproducible scenarios, event-log I/O)
+export { ProtocolRegistry, defaultRegistry, type ProtocolFactory } from "./registry.js";
+export * from "./persistence/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";

@@ -167,6 +167,16 @@ body.app {
   width: 72px;
 }
 
+.project-select {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+}
+
 .toolbar__count {
   font-family: var(--font-mono);
   color: var(--text-secondary);

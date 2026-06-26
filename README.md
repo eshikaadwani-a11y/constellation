@@ -87,7 +87,15 @@ Constellation is being built in the open, milestone by milestone.
 | Intelligent tutor           | ✅ Implemented |
 | Protocol library            | ✅ Implemented |
 | Cloud orchestration         | ✅ Implemented |
-| Persistence & versioning    | ⏳ Next        |
+| Persistence & versioning    | ✅ Implemented |
+| Production infrastructure   | ⏳ Next        |
+
+**Persistence is built on reproducibility.** Since a run is a pure function of its inputs, a project
+saves as a tiny **declarative scenario spec** — seed, nodes (by protocol name, via a **protocol
+registry**), network config, and a schedule of client requests and faults — and reloading it
+reproduces the run bit-for-bit (verified by test). The recorded event stream can be **exported and
+re-imported** as JSON for offline analysis. In the lab, projects save to local storage with a
+version history, and any run exports to a portable event log.
 
 **Cloud orchestration.** A Kubernetes-style control plane built from engine protocols: a pure,
 tested bin-packing **scheduler**; **kubelets** that heartbeat capacity and run assigned pods; a
