@@ -85,7 +85,17 @@ Constellation is being built in the open, milestone by milestone.
 | Chaos engineering           | ✅ Implemented |
 | Scalability                 | ✅ Implemented |
 | Intelligent tutor           | ✅ Implemented |
-| Additional protocols        | ⏳ Next        |
+| Protocol library            | ✅ Implemented |
+| Persistence & versioning    | ⏳ Next        |
+
+**Protocol library.** Beyond Raft, the engine ships four primitives a backend engineer actually
+reaches for: **vector clocks** (causality / conflict detection), **consistent hashing** (sharding and
+CDN routing, with virtual nodes and minimal-remap verified), **epidemic gossip** (anti-entropy
+dissemination), and **two-phase commit** — which also demonstrates 2PC's real-world weakness: crash
+the coordinator mid-transaction and watch participants block, a property the tests prove. Every one
+is a plugin behind the `Protocol` interface; the engine needs no changes to run a new algorithm. See
+[`docs/protocols.md`](docs/protocols.md) for a complete `class MyProtocol implements Protocol`
+example.
 
 **The systems tutor** is a deterministic reasoning engine — deliberately _not_ an LLM wrapper. It
 analyzes the recorded event stream and explains, causally, why the system behaved as it did: why a

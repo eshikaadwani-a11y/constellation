@@ -7,7 +7,17 @@
  * own milestones; these exist to exercise the visualization with real,
  * deterministic message flow.
  */
-import { Simulation, raft, type Message, type NodeId, type Protocol } from "@constellation/engine";
+import {
+  Simulation,
+  gossip,
+  gossipSet,
+  raft,
+  twoPhaseCommitCoordinator,
+  twoPhaseCommitParticipant,
+  type Message,
+  type NodeId,
+  type Protocol,
+} from "@constellation/engine";
 
 export interface Scenario {
   readonly id: string;
@@ -40,35 +50,6 @@ function ringNode(next: NodeId): Protocol<{ hops: number }, Token> {
     },
     onTimer(ctx, state) {
       ctx.send(next, { type: "token", hops: state.hops + 1 });
-      return state;
-    },
-  };
-}
-
-// --- Epidemic gossip -------------------------------------------------------
-
-interface Rumor extends Message {
-  type: "rumor";
-}
-
-function gossipNode(seeded: boolean): Protocol<{ knows: boolean; pushes: number }, Rumor> {
-  return {
-    name: "gossip",
-    init(ctx) {
-      ctx.setTimer(ctx.randomInt(250, 500), "gossip");
-      return { knows: seeded, pushes: 0 };
-    },
-    onMessage(ctx, state) {
-      if (!state.knows) ctx.log("info", "learned the rumor");
-      return { ...state, knows: true };
-    },
-    onTimer(ctx, state) {
-      ctx.setTimer(ctx.randomInt(250, 500), "gossip");
-      if (state.knows && ctx.peers.length > 0) {
-        const peer = ctx.peers[ctx.randomInt(0, ctx.peers.length - 1)] as NodeId;
-        ctx.send(peer, { type: "rumor" });
-        return { ...state, pushes: state.pushes + 1 };
-      }
       return state;
     },
   };
@@ -134,12 +115,47 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "gossip",
     name: "Epidemic gossip",
-    description: "One node starts with a rumor; watch it spread across the cluster.",
-    defaultNodes: 10,
+    description: "Anti-entropy dissemination: a value injected at one node spreads to all.",
+    defaultNodes: 12,
     minNodes: 4,
     maxNodes: 80,
     populate(sim, nodeCount) {
-      ids(nodeCount).forEach((id, i) => sim.addNode(id, gossipNode(i === 0)));
+      ids(nodeCount).forEach((id) => sim.addNode(id, gossip({ interval: 280 })));
+      // Seed a value at n1, then keep updating it so dissemination is ongoing.
+      let v = 1;
+      const update = (): void => {
+        sim.inject("n1", gossipSet("leader", `epoch-${v}`, v), "client");
+        v += 1;
+        sim.schedule(4000, update);
+      };
+      sim.schedule(400, update);
+    },
+  },
+  {
+    id: "2pc",
+    name: "Two-phase commit",
+    description: "Atomic distributed transactions — crash the coordinator to see 2PC block.",
+    defaultNodes: 5,
+    minNodes: 3,
+    maxNodes: 9,
+    populate(sim, nodeCount) {
+      const all = ids(nodeCount);
+      sim.addNode(all[0] as NodeId, twoPhaseCommitCoordinator({ timeout: 3000 }));
+      // Most participants vote yes; the last one occasionally refuses.
+      all.slice(1).forEach((id, i) => {
+        const refuses = i === all.length - 2;
+        sim.addNode(
+          id,
+          twoPhaseCommitParticipant((txId) => !(refuses && txId % 4 === 0)),
+        );
+      });
+      let txId = 1;
+      const begin = (): void => {
+        sim.inject(all[0] as NodeId, { type: "2pc-begin", txId }, "client");
+        txId += 1;
+        sim.schedule(3500, begin);
+      };
+      sim.schedule(800, begin);
     },
   },
   {
