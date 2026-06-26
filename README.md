@@ -84,13 +84,15 @@ Constellation is being built in the open, milestone by milestone.
 | Observability & replay      | ✅ Implemented |
 | Chaos engineering           | ✅ Implemented |
 | Scalability                 | ✅ Implemented |
+| Intelligent tutor           | ✅ Implemented |
 | Additional protocols        | ⏳ Next        |
 
-**Scalability.** The engine sustains ~0.5–0.8M events/sec single-threaded (`npm run bench`), running
-hundreds of nodes deterministically. Time-travel scales via **checkpointed replay**: periodic folded
-snapshots make seeking O(checkpoint interval) instead of O(history), so scrubbing a 200k-event run is
-instant. The canvas applies level-of-detail above ~60 nodes (lightweight nodes, no per-edge
-animation) and throttles React renders to ~30fps while the engine keeps advancing every frame.
+**The systems tutor** is a deterministic reasoning engine — deliberately _not_ an LLM wrapper. It
+analyzes the recorded event stream and explains, causally, why the system behaved as it did: why a
+node won an election (with the vote count and the majority it cleared), when an entry became durable,
+why a leader crash is critical, and how a partition stalls the minority side (the CAP theorem, live).
+Explanations are pure, reproducible, and unit-tested. The lab surfaces them in a **Tutor** panel
+(click to jump the timeline) and as per-node "why is this node doing that?" notes in the inspector.
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable

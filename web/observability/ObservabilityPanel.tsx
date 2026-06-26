@@ -8,17 +8,19 @@ import { Timeline } from "./Timeline.js";
 import { LogStream } from "./LogStream.js";
 import { MetricsChart } from "./MetricsChart.js";
 import { TraceView } from "./TraceView.js";
+import { InsightsView } from "./InsightsView.js";
 
-type Tab = "logs" | "metrics" | "traces";
+type Tab = "tutor" | "logs" | "metrics" | "traces";
 
 const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "tutor", label: "Tutor" },
   { id: "logs", label: "Logs" },
   { id: "metrics", label: "Metrics" },
   { id: "traces", label: "Traces" },
 ];
 
 export function ObservabilityPanel({ sim }: { sim: SimController }): JSX.Element {
-  const [tab, setTab] = useState<Tab>("metrics");
+  const [tab, setTab] = useState<Tab>("tutor");
   const viewTime = sim.live ? Number.POSITIVE_INFINITY : (sim.reviewTime ?? 0);
 
   return (
@@ -37,6 +39,14 @@ export function ObservabilityPanel({ sim }: { sim: SimController }): JSX.Element
         {!sim.live && <span className="obs__reviewing">⏸ reviewing history</span>}
       </div>
       <div className="obs__body">
+        {tab === "tutor" && (
+          <InsightsView
+            recorder={sim.recorder}
+            version={sim.version}
+            viewTime={viewTime}
+            onJump={sim.scrubTo}
+          />
+        )}
         {tab === "logs" && (
           <LogStream
             recorder={sim.recorder}

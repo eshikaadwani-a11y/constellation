@@ -3,6 +3,7 @@
  * restart it to see how the protocol reacts.
  */
 import type { TopologySnapshot } from "@constellation/engine";
+import { explainRaft } from "@constellation/engine";
 import type { SimController } from "./useSimulation.js";
 
 interface Props {
@@ -25,6 +26,10 @@ export function Inspector({ snapshot, selectedId, sim, onClose }: Props): JSX.El
 
   const state = sim.stateOf(node.id);
   const down = node.status === "down";
+  const explanation =
+    state && typeof state === "object" && "role" in state
+      ? explainRaft(node.id, state as Parameters<typeof explainRaft>[1])
+      : null;
 
   return (
     <aside className="inspector">
@@ -55,6 +60,13 @@ export function Inspector({ snapshot, selectedId, sim, onClose }: Props): JSX.El
 
       <div className="inspector__statelabel">Protocol state</div>
       <pre className="inspector__state">{JSON.stringify(state, null, 2)}</pre>
+
+      {explanation && (
+        <>
+          <div className="inspector__statelabel">Tutor</div>
+          <p className="inspector__why">{explanation}</p>
+        </>
+      )}
 
       {down ? (
         <button className="btn btn--full" onClick={() => sim.restart(node.id)}>

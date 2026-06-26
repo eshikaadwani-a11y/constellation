@@ -26,5 +26,8 @@ export * from "./observability/index.js";
 // Chaos engineering
 export * from "./chaos/index.js";
 
+// Systems tutor (deterministic behaviour explanations)
+export * from "./tutor/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";
