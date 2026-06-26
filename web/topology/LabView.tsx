@@ -25,20 +25,28 @@ export function LabView(): JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const scenario = scenarioById(sim.scenarioId);
 
-  // Colour Raft nodes by role (leader / candidate / follower); other protocols
-  // fall back to the default node colour.
+  // Colour nodes by protocol semantics: Raft role, or machine utilization in the
+  // cloud scenario. Other protocols fall back to the default node colour.
   const accentOf = (id: string): string | undefined => {
-    const state = sim.stateOf(id) as { role?: string } | undefined;
-    switch (state?.role) {
-      case "leader":
-        return "var(--role-leader)";
-      case "candidate":
-        return "var(--role-candidate)";
-      case "follower":
-        return "var(--role-follower)";
-      default:
-        return undefined;
+    const state = sim.stateOf(id) as
+      | { role?: string; capacity?: { cpu: number }; used?: { cpu: number }; machines?: unknown }
+      | undefined;
+    if (!state) return undefined;
+    if (state.role) {
+      return state.role === "leader"
+        ? "var(--role-leader)"
+        : state.role === "candidate"
+          ? "var(--role-candidate)"
+          : "var(--role-follower)";
     }
+    if (state.machines) return "var(--role-candidate)"; // the control plane
+    if (state.capacity && state.used) {
+      const u = state.used.cpu / state.capacity.cpu;
+      if (u >= 0.85) return "var(--danger)";
+      if (u >= 0.5) return "var(--accent)";
+      return "var(--success)";
+    }
+    return undefined;
   };
   const isRaft = sim.scenarioId === "raft";
 

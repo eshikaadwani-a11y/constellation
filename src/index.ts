@@ -29,5 +29,8 @@ export * from "./chaos/index.js";
 // Systems tutor (deterministic behaviour explanations)
 export * from "./tutor/index.js";
 
+// Cloud infrastructure (scheduler + orchestration control plane)
+export * from "./cloud/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";

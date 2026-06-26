@@ -86,7 +86,15 @@ Constellation is being built in the open, milestone by milestone.
 | Scalability                 | ✅ Implemented |
 | Intelligent tutor           | ✅ Implemented |
 | Protocol library            | ✅ Implemented |
+| Cloud orchestration         | ✅ Implemented |
 | Persistence & versioning    | ⏳ Next        |
+
+**Cloud orchestration.** A Kubernetes-style control plane built from engine protocols: a pure,
+tested bin-packing **scheduler**; **kubelets** that heartbeat capacity and run assigned pods; a
+**control plane** that reconciles desired state, bin-packs pods, and detects dead machines by missed
+heartbeats — rescheduling their pods; and a **horizontal autoscaler**. Crash a machine and the
+control plane notices the silence and reschedules, all on the deterministic timeline. See
+[`docs/cloud.md`](docs/cloud.md).
 
 **Protocol library.** Beyond Raft, the engine ships four primitives a backend engineer actually
 reaches for: **vector clocks** (causality / conflict detection), **consistent hashing** (sharding and

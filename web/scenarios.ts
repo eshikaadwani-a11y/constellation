@@ -9,8 +9,10 @@
  */
 import {
   Simulation,
+  controlPlane,
   gossip,
   gossipSet,
+  kubelet,
   raft,
   twoPhaseCommitCoordinator,
   twoPhaseCommitParticipant,
@@ -167,6 +169,46 @@ export const SCENARIOS: Scenario[] = [
     maxNodes: 14,
     populate(sim, nodeCount) {
       ids(nodeCount).forEach((id) => sim.addNode(id, heartbeatNode()));
+    },
+  },
+  {
+    id: "cloud",
+    name: "Cloud orchestration",
+    description:
+      "A Kubernetes-style control plane bin-packs pods onto machines. Crash one to watch rescheduling.",
+    defaultNodes: 6,
+    minNodes: 4,
+    maxNodes: 12,
+    populate(sim, nodeCount) {
+      const machines = nodeCount - 1; // one node is the control plane
+      sim.addNode(
+        "control",
+        controlPlane({
+          reconcileInterval: 500,
+          heartbeatTimeout: 1500,
+          deployments: [
+            {
+              type: "kube-deploy",
+              name: "web",
+              replicas: machines * 2,
+              request: { cpu: 2, memory: 4 },
+              hpa: { min: 2, max: machines * 3, target: 60 },
+            },
+          ],
+        }),
+      );
+      for (let i = 0; i < machines; i++) {
+        sim.addNode(`m${i + 1}`, kubelet("control", { cpu: 8, memory: 16 }));
+      }
+      // Oscillating load drives the horizontal autoscaler.
+      let t = 0;
+      const load = (): void => {
+        const utilization = 45 + 45 * Math.abs(Math.sin(t));
+        sim.inject("control", { type: "kube-load", name: "web", utilization }, "client");
+        t += 0.6;
+        sim.schedule(3000, load);
+      };
+      sim.schedule(2000, load);
     },
   },
 ];
