@@ -77,29 +77,54 @@ Constellation is being built in the open, milestone by milestone.
 | Area                        | Status         |
 | --------------------------- | -------------- |
 | Core primitives (RNG, heap) | ✅ Implemented |
-| Simulation engine           | 🚧 Next        |
-| Topology visualization      | ⏳ Planned     |
+| Simulation engine           | ✅ Implemented |
+| Topology visualization      | 🚧 Next        |
 | Networking layer            | ⏳ Planned     |
 | Raft consensus              | ⏳ Planned     |
 | Observability & replay      | ⏳ Planned     |
 | Chaos engineering           | ⏳ Planned     |
 | Additional protocols        | ⏳ Planned     |
 
-Today the repository ships the deterministic foundation the rest of the engine is built on: a
-seeded PRNG with reproducible streams and statistical distributions, and an allocation-light
-priority queue — both fully unit-tested.
+The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
+scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable
+event stream, and crash/restart support. Defining a distributed algorithm means writing one small
+`Protocol`:
 
 ```ts
-import { Random, MinHeap } from "@constellation/engine";
+import { Simulation, type Protocol, type Message } from "@constellation/engine";
 
-const rng = new Random(42);
-rng.exponential(20); // latency sample, mean 20ms — identical for every run on seed 42
+interface Ping extends Message {
+  type: "ping";
+  n: number;
+}
+interface Pong extends Message {
+  type: "pong";
+  n: number;
+}
 
-// The scheduler orders events by (time, sequence) so ties break deterministically.
-const queue = new MinHeap<{ time: number; seq: number }>(
-  (a, b) => a.time - b.time || a.seq - b.seq,
-);
+const pingPong = (
+  target: string | null,
+  limit: number,
+): Protocol<{ rounds: number }, Ping | Pong> => ({
+  name: "ping-pong",
+  init: (ctx) => (target && ctx.send(target, { type: "ping", n: 0 }), { rounds: 0 }),
+  onMessage(ctx, state, from, msg) {
+    if (msg.type === "ping") return (ctx.send(from, { type: "pong", n: msg.n }), state);
+    if (msg.n < limit) ctx.send(from, { type: "ping", n: msg.n + 1 });
+    return { rounds: state.rounds + 1 };
+  },
+  onTimer: (_ctx, state) => state,
+});
+
+const sim = new Simulation({ seed: 42 });
+sim.subscribe((event) => console.log(event.time, event.kind)); // observe everything
+sim.addNode("a", pingPong("b", 8));
+sim.addNode("b", pingPong(null, 8));
+sim.run({ until: 10_000 }); // deterministic: identical on every run
 ```
+
+Every `send`, `setTimer`, delivery, drop, and log surfaces on the engine's event stream — the
+substrate the visualization and observability milestones build on.
 
 ## Quick start
 

@@ -6,5 +6,10 @@
  * Node-based test suite.
  */
 export { VERSION } from "./version.js";
+
+// Core primitives
 export { Random } from "./core/prng.js";
 export { MinHeap } from "./core/heap.js";
+
+// Simulation engine
+export * from "./engine/index.js";

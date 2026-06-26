@@ -8,6 +8,7 @@
  */
 import { useState } from "react";
 import { VERSION } from "@constellation/engine";
+import { runDemo } from "./engineDemo.js";
 
 const LOGO = (
   <svg viewBox="0 0 32 32" fill="none" width={20} height={20} aria-hidden="true">
@@ -20,6 +21,7 @@ const LOGO = (
 
 export function App(): JSX.Element {
   const [engineReady] = useState(true);
+  const [demo] = useState(() => runDemo());
 
   return (
     <div className="shell">
@@ -46,10 +48,16 @@ export function App(): JSX.Element {
 
       <main className="workspace">
         <div className="workspace__inner">
-          <h2>Your laboratory is ready</h2>
+          <h2>The simulation engine is live</h2>
           <p>
-            The deterministic simulation engine is wired in. The interactive topology canvas,
-            protocol controls, and time-travel telemetry come online in the next milestones.
+            A deterministic ping-pong scenario just ran entirely in your browser — {demo.rounds}{" "}
+            round-trips across {demo.events} events of virtual time, finishing at{" "}
+            {demo.virtualTime.toLocaleString()}ms. Re-run it a thousand times and you get the exact
+            same history.
+          </p>
+          <p>
+            The interactive topology canvas, protocol controls, and time-travel telemetry come
+            online in the next milestones.
           </p>
         </div>
       </main>

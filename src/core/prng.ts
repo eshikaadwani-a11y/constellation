@@ -101,8 +101,12 @@ export class Random {
     return out;
   }
 
-  /** Creates an independent generator derived deterministically from this one. */
+  /** Creates an independent generator derived deterministically from this one.
+   *
+   * Each call draws a fresh seed from this stream, so sequentially forked
+   * generators (one per node, say) produce independent sequences while
+   * remaining a pure function of the original seed. */
   fork(): Random {
-    return new Random(this.state ^ 0x9e3779b9);
+    return new Random((this.next() * 0x100000000) >>> 0);
   }
 }
