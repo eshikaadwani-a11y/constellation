@@ -8,7 +8,7 @@
  * place wall-clock time touches it.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Simulation } from "@constellation/engine";
+import { Network, Simulation, uniformLatency } from "@constellation/engine";
 import { TopologyModel, type TopologySnapshot } from "@constellation/engine";
 import { scenarioById } from "../scenarios.js";
 
@@ -43,15 +43,20 @@ export interface SimController {
 interface Engine {
   sim: Simulation;
   model: TopologyModel;
+  network: Network;
   unsubscribe: () => void;
 }
 
 function createEngine(scenarioId: string, nodeCount: number, seed: number): Engine {
-  const sim = new Simulation({ seed });
+  // A realistic network: tens-of-ms latency with jitter, so messages take
+  // visible time to cross links and can reorder. The chaos milestone mutates
+  // this network live (loss, partitions); it is exposed here for that purpose.
+  const network = new Network({ latency: uniformLatency(40, 140) });
+  const sim = new Simulation({ seed, transport: network });
   const model = new TopologyModel();
   const unsubscribe = model.attach(sim); // attach BEFORE nodes are added
   scenarioById(scenarioId).populate(sim, nodeCount);
-  return { sim, model, unsubscribe };
+  return { sim, model, network, unsubscribe };
 }
 
 export function useSimulation(initialScenario = "ring"): SimController {

@@ -79,19 +79,17 @@ Constellation is being built in the open, milestone by milestone.
 | Core primitives (RNG, heap) | ✅ Implemented |
 | Simulation engine           | ✅ Implemented |
 | Topology visualization      | ✅ Implemented |
-| Networking layer            | 🚧 Next        |
-| Raft consensus              | ⏳ Planned     |
+| Networking layer            | ✅ Implemented |
+| Raft consensus              | 🚧 Next        |
 | Observability & replay      | ⏳ Planned     |
 | Chaos engineering           | ⏳ Planned     |
 | Additional protocols        | ⏳ Planned     |
 
-The **interactive topology engine** is implemented on top of the simulation core. A pure,
-isomorphic `TopologyModel` folds the engine's event stream into a live picture of the cluster —
-nodes, links, and in-flight messages — and a React Flow canvas renders it with deterministic
-layout, animated traffic, draggable nodes, a node inspector, and transport-style playback
-(play / pause / step, variable speed). Three demo protocols (a token ring, epidemic gossip, and an
-all-to-all heartbeat) drive distinct, recognizable traffic patterns. The model and layout are unit
-tested; only the React rendering layer requires a browser.
+The **networking layer** sits between `ctx.send` and delivery: a `Network` transport with pluggable
+latency distributions (constant, uniform, normal, exponential), independent packet loss, and
+time-windowed partitions — all deterministic. Reordering falls out naturally from per-message
+latency, and retries are demonstrated by a reliable-delivery protocol that rides on top of a 60%-loss
+link and still gets through. All of it is unit tested.
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable
