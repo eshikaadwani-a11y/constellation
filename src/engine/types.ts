@@ -35,4 +35,10 @@ export interface Envelope<M extends Message = Message> {
   readonly message: M;
   /** Virtual time the message was handed to the network. */
   readonly sentAt: SimTime;
+  /**
+   * The id of the message whose delivery caused this one to be sent, if any.
+   * Timer- and client-originated messages have no cause; following this field
+   * reconstructs the causal trace of a request.
+   */
+  readonly causedBy?: number;
 }

@@ -20,5 +20,8 @@ export * from "./network/index.js";
 // Distributed protocol library
 export * from "./protocols/index.js";
 
+// Observability: recording, metrics, logs, tracing
+export * from "./observability/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";

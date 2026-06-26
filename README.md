@@ -81,16 +81,17 @@ Constellation is being built in the open, milestone by milestone.
 | Topology visualization      | ✅ Implemented |
 | Networking layer            | ✅ Implemented |
 | Raft consensus              | ✅ Implemented |
-| Observability & replay      | 🚧 Next        |
-| Chaos engineering           | ⏳ Planned     |
+| Observability & replay      | ✅ Implemented |
+| Chaos engineering           | 🚧 Next        |
 | Additional protocols        | ⏳ Planned     |
 
-**Raft consensus** is implemented as a single `Protocol` — randomized-timeout leader election, log
-replication with the consistency check, majority commitment, and the full term machinery. The test
-suite verifies the paper's safety properties (at most one leader per term, identical logs across the
-cluster) and liveness (a new leader is elected within bounded time after the leader crashes). In the
-lab it ships as the default scenario, with nodes coloured by role — crash the leader and watch a new
-one rise. See [`docs/raft.md`](docs/raft.md).
+**Observability & time-travel** are built entirely by folding the engine's event stream — no
+counters live in the engine. An `EventRecorder` captures the full history; from it, metrics
+(throughput, loss, delivery ratio), a unified log journal, and distributed traces (causal message
+trees reconstructed from `causedBy` lineage) are derived as pure functions. The lab gains a bottom
+dock — ECharts throughput, a filterable log stream, and a trace waterfall — plus a **timeline
+scrubber**: drag into the past and the topology re-folds to that instant, deterministically, with no
+re-simulation.
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable

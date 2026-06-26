@@ -8,6 +8,7 @@ import { scenarioById } from "../scenarios.js";
 import { TopologyCanvas } from "./TopologyCanvas.js";
 import { Toolbar } from "./Toolbar.js";
 import { Inspector } from "./Inspector.js";
+import { ObservabilityPanel } from "../observability/ObservabilityPanel.js";
 import { useSimulation } from "./useSimulation.js";
 
 const LOGO = (
@@ -111,6 +112,8 @@ export function LabView(): JSX.Element {
           onClose={() => setSelectedId(null)}
         />
       </div>
+
+      <ObservabilityPanel sim={sim} />
     </div>
   );
 }

@@ -1,15 +1,22 @@
 /**
  * The bridge between the deterministic engine and React.
  *
- * `useSimulation` owns a {@link Simulation} and a {@link TopologyModel}, drives
- * the clock from a requestAnimationFrame loop scaled by a playback speed, and
- * surfaces an immutable {@link TopologySnapshot} plus transport-style controls
- * (play / pause / step / reset). The engine stays pure; this hook is the only
- * place wall-clock time touches it.
+ * `useSimulation` owns a {@link Simulation}, a {@link TopologyModel}, and an
+ * {@link EventRecorder}. It drives the clock from a requestAnimationFrame loop
+ * scaled by a playback speed, and surfaces an immutable {@link TopologySnapshot}
+ * plus transport-style controls. It also implements **time travel**: scrubbing
+ * to a past moment re-folds the recorded history into the topology at that
+ * instant, with the engine paused — no re-simulation required.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Network, Simulation, uniformLatency } from "@constellation/engine";
-import { TopologyModel, type TopologySnapshot } from "@constellation/engine";
+import {
+  EventRecorder,
+  Network,
+  Simulation,
+  TopologyModel,
+  uniformLatency,
+  type TopologySnapshot,
+} from "@constellation/engine";
 import { scenarioById } from "../scenarios.js";
 
 export interface SimStats {
@@ -22,12 +29,19 @@ export interface SimStats {
 export interface SimController {
   snapshot: TopologySnapshot;
   time: number;
+  duration: number;
   playing: boolean;
+  /** True when showing live state; false when scrubbed into the past. */
+  live: boolean;
+  reviewTime: number | null;
   speed: number;
   stats: SimStats;
   scenarioId: string;
   nodeCount: number;
   seed: number;
+  recorder: EventRecorder;
+  /** Bumps whenever the recorded history grows; a memo dependency for panels. */
+  version: number;
   play(): void;
   pause(): void;
   toggle(): void;
@@ -37,6 +51,8 @@ export interface SimController {
   load(scenarioId: string, nodeCount: number, seed: number): void;
   crash(id: string): void;
   restart(id: string): void;
+  scrubTo(time: number): void;
+  exitReview(): void;
   stateOf(id: string): unknown;
 }
 
@@ -44,22 +60,46 @@ interface Engine {
   sim: Simulation;
   model: TopologyModel;
   network: Network;
+  recorder: EventRecorder;
   unsubscribe: () => void;
 }
 
+const EMPTY: TopologySnapshot = {
+  time: 0,
+  nodes: [],
+  links: [],
+  inFlight: [],
+  delivered: 0,
+  dropped: 0,
+};
+
 function createEngine(scenarioId: string, nodeCount: number, seed: number): Engine {
-  // A realistic network: tens-of-ms latency with jitter, so messages take
-  // visible time to cross links and can reorder. The chaos milestone mutates
-  // this network live (loss, partitions); it is exposed here for that purpose.
   const network = new Network({ latency: uniformLatency(40, 140) });
   const sim = new Simulation({ seed, transport: network });
   const model = new TopologyModel();
-  const unsubscribe = model.attach(sim); // attach BEFORE nodes are added
+  const recorder = new EventRecorder({ cap: 200000 });
+  const unModel = model.attach(sim);
+  const unRec = recorder.attach(sim);
   scenarioById(scenarioId).populate(sim, nodeCount);
-  return { sim, model, network, unsubscribe };
+  return {
+    sim,
+    model,
+    network,
+    recorder,
+    unsubscribe: () => {
+      unModel();
+      unRec();
+    },
+  };
 }
 
-export function useSimulation(initialScenario = "ring"): SimController {
+function snapshotAt(recorder: EventRecorder, time: number): TopologySnapshot {
+  const model = new TopologyModel();
+  for (const e of recorder.until(time)) model.apply(e);
+  return model.snapshot();
+}
+
+export function useSimulation(initialScenario = "raft"): SimController {
   const initial = scenarioById(initialScenario);
   const [config, setConfig] = useState({
     scenarioId: initialScenario,
@@ -68,43 +108,41 @@ export function useSimulation(initialScenario = "ring"): SimController {
   });
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [snapshot, setSnapshot] = useState<TopologySnapshot>(() => ({
-    time: 0,
-    nodes: [],
-    links: [],
-    inFlight: [],
-    delivered: 0,
-    dropped: 0,
-  }));
+  const [liveSnapshot, setLiveSnapshot] = useState<TopologySnapshot>(EMPTY);
+  const [reviewTime, setReviewTime] = useState<number | null>(null);
+  const [version, setVersion] = useState(0);
 
   const engineRef = useRef<Engine | null>(null);
   const playingRef = useRef(playing);
+  const reviewRef = useRef(reviewTime);
   const speedRef = useRef(speed);
   playingRef.current = playing;
+  reviewRef.current = reviewTime;
   speedRef.current = speed;
 
-  // (Re)build the engine whenever the scenario configuration changes.
   useEffect(() => {
     engineRef.current?.unsubscribe();
     const engine = createEngine(config.scenarioId, config.nodeCount, config.seed);
     engineRef.current = engine;
-    setSnapshot(engine.model.snapshot());
+    setLiveSnapshot(engine.model.snapshot());
+    setReviewTime(null);
+    setVersion((v) => v + 1);
     setPlaying(true);
     return () => engine.unsubscribe();
   }, [config]);
 
-  // The animation-frame driver.
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const tick = (now: number): void => {
       const engine = engineRef.current;
-      if (engine && playingRef.current) {
-        const dt = Math.min(now - last, 100); // clamp tab-switch jumps
+      if (engine && playingRef.current && reviewRef.current === null) {
+        const dt = Math.min(now - last, 100);
         const virtual = dt * speedRef.current;
         if (virtual > 0) {
-          engine.sim.run({ until: engine.sim.now + virtual, maxSteps: 20000 });
-          setSnapshot(engine.model.snapshot());
+          engine.sim.run({ until: engine.sim.now + virtual, maxSteps: 50000 });
+          setLiveSnapshot(engine.model.snapshot());
+          setVersion((v) => v + 1);
         }
       }
       last = now;
@@ -118,62 +156,86 @@ export function useSimulation(initialScenario = "ring"): SimController {
     const engine = engineRef.current;
     if (!engine) return;
     setPlaying(false);
+    setReviewTime(null);
     engine.sim.step();
-    setSnapshot(engine.model.snapshot());
+    setLiveSnapshot(engine.model.snapshot());
+    setVersion((v) => v + 1);
   }, []);
 
-  const reset = useCallback(() => {
-    setConfig((c) => ({ ...c })); // new object → triggers rebuild effect
-  }, []);
-
-  const load = useCallback((scenarioId: string, nodeCount: number, seed: number) => {
-    setConfig({ scenarioId, nodeCount, seed });
-  }, []);
+  const reset = useCallback(() => setConfig((c) => ({ ...c })), []);
+  const load = useCallback(
+    (scenarioId: string, nodeCount: number, seed: number) =>
+      setConfig({ scenarioId, nodeCount, seed }),
+    [],
+  );
 
   const crash = useCallback((id: string) => {
     const engine = engineRef.current;
     if (!engine) return;
     engine.sim.crash(id);
-    setSnapshot(engine.model.snapshot());
+    setLiveSnapshot(engine.model.snapshot());
+    setVersion((v) => v + 1);
   }, []);
 
   const restart = useCallback((id: string) => {
     const engine = engineRef.current;
     if (!engine) return;
     engine.sim.restart(id);
-    setSnapshot(engine.model.snapshot());
+    setLiveSnapshot(engine.model.snapshot());
+    setVersion((v) => v + 1);
   }, []);
 
-  const stateOf = useCallback((id: string) => engineRef.current?.sim.stateOf(id), []);
+  const scrubTo = useCallback((time: number) => {
+    setPlaying(false);
+    setReviewTime(time);
+  }, []);
+  const exitReview = useCallback(() => setReviewTime(null), []);
+  const play = useCallback(() => {
+    setReviewTime(null);
+    setPlaying(true);
+  }, []);
 
-  const stats: SimStats = useMemo(
-    () => ({
-      events: engineRef.current?.sim.eventCount ?? 0,
-      inFlight: snapshot.inFlight.length,
-      delivered: snapshot.delivered,
-      dropped: snapshot.dropped,
-    }),
-    [snapshot],
+  const recorder = engineRef.current?.recorder ?? new EventRecorder();
+  const displaySnapshot = useMemo(
+    () => (reviewTime === null ? liveSnapshot : snapshotAt(recorder, reviewTime)),
+    [reviewTime, liveSnapshot, recorder, version],
   );
 
+  const stats: SimStats = {
+    events: engineRef.current?.sim.eventCount ?? 0,
+    inFlight: displaySnapshot.inFlight.length,
+    delivered: displaySnapshot.delivered,
+    dropped: displaySnapshot.dropped,
+  };
+
   return {
-    snapshot,
-    time: snapshot.time,
+    snapshot: displaySnapshot,
+    time: reviewTime ?? displaySnapshot.time,
+    duration: recorder.duration,
     playing,
+    live: reviewTime === null,
+    reviewTime,
     speed,
     stats,
     scenarioId: config.scenarioId,
     nodeCount: config.nodeCount,
     seed: config.seed,
-    play: useCallback(() => setPlaying(true), []),
+    recorder,
+    version,
+    play,
     pause: useCallback(() => setPlaying(false), []),
-    toggle: useCallback(() => setPlaying((p) => !p), []),
+    toggle: useCallback(() => {
+      setReviewTime(null);
+      setPlaying((p) => !p);
+    }, []),
     step,
     reset,
     setSpeed,
     load,
     crash,
     restart,
-    stateOf,
+    scrubTo,
+    exitReview,
+    stateOf: useCallback((id: string) => engineRef.current?.sim.stateOf(id), []),
   };
 }

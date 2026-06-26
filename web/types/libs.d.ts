@@ -33,6 +33,7 @@ declare module "react" {
     deps?: readonly unknown[],
   ): void;
   export function useRef<T>(initial: T): RefObject<T>;
+  export function useRef<T>(initial: T | null): RefObject<T | null>;
   export function useMemo<T>(factory: () => T, deps: readonly unknown[]): T;
   export function useCallback<T extends (...args: never[]) => unknown>(
     cb: T,
@@ -143,6 +144,20 @@ declare module "framer-motion" {
   export const AnimatePresence: ComponentType<{ children?: ReactNode; initial?: boolean }>;
 }
 
+// --- ECharts --------------------------------------------------------------
+declare module "echarts" {
+  export interface EChartsInstance {
+    setOption(option: unknown, notMerge?: boolean): void;
+    resize(): void;
+    dispose(): void;
+  }
+  export function init(
+    dom: HTMLElement,
+    theme?: string | null,
+    opts?: Record<string, unknown>,
+  ): EChartsInstance;
+}
+
 // JSX intrinsic elements are typed loosely: we can't ship the full DOM prop
 // surface without @types/react, but our own components remain fully checked.
 // Declared at top level (this file is an ambient script) so it lands in the
@@ -151,6 +166,9 @@ declare namespace JSX {
   type Element = import("react").ReactElement;
   interface ElementChildrenAttribute {
     children: Record<string, never>;
+  }
+  interface IntrinsicAttributes {
+    key?: string | number;
   }
   interface IntrinsicElements {
     [tag: string]: Record<string, unknown>;

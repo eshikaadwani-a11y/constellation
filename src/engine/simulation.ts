@@ -72,6 +72,8 @@ export class Simulation {
   private eventSeq = 0;
   private nextMessageId = 1;
   private nextTimerId = 1;
+  /** The message currently being delivered, used to stamp causal lineage. */
+  private currentCause: number | null = null;
 
   private readonly queue = new MinHeap<Task>((a, b) => a.time - b.time || a.seq - b.seq);
   private readonly nodes = new Map<NodeId, NodeRuntime>();
@@ -254,12 +256,17 @@ export class Simulation {
       return;
     }
     this.emit({ kind: "message:delivered", seq: this.eventSeq++, time: this.clock, envelope });
-    node.state = node.protocol.onMessage(
-      this.contextFor(node),
-      node.state,
-      envelope.from,
-      envelope.message,
-    );
+    this.currentCause = envelope.id;
+    try {
+      node.state = node.protocol.onMessage(
+        this.contextFor(node),
+        node.state,
+        envelope.from,
+        envelope.message,
+      );
+    } finally {
+      this.currentCause = null;
+    }
   }
 
   private fireTimer(nodeId: NodeId, timerId: TimerId, token: string): void {
@@ -282,13 +289,17 @@ export class Simulation {
   // ---- Effects from protocol callbacks --------------------------------------
 
   private dispatchSend(from: NodeId, to: NodeId, message: Message): void {
-    const envelope: Envelope = {
-      id: this.nextMessageId++,
-      from,
-      to,
-      message,
-      sentAt: this.clock,
-    };
+    const envelope: Envelope =
+      this.currentCause !== null
+        ? {
+            id: this.nextMessageId++,
+            from,
+            to,
+            message,
+            sentAt: this.clock,
+            causedBy: this.currentCause,
+          }
+        : { id: this.nextMessageId++, from, to, message, sentAt: this.clock };
 
     const decision = this.transport.route(envelope, this.transportRng, this.clock);
     if (!decision.deliver) {
