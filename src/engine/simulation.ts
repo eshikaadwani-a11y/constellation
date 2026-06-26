@@ -289,19 +289,22 @@ export class Simulation {
       message,
       sentAt: this.clock,
     };
-    this.emit({ kind: "message:sent", seq: this.eventSeq++, time: this.clock, envelope });
 
     const decision = this.transport.route(envelope, this.transportRng, this.clock);
     if (!decision.deliver) {
+      this.emit({ kind: "message:sent", seq: this.eventSeq++, time: this.clock, envelope });
       this.emitDrop(envelope, decision.reason ?? "dropped");
       return;
     }
-    this.queue.push({
-      kind: "deliver",
-      time: this.clock + Math.max(0, Math.round(decision.latency)),
-      seq: this.taskSeq++,
+    const deliverAt = this.clock + Math.max(0, Math.round(decision.latency));
+    this.emit({
+      kind: "message:sent",
+      seq: this.eventSeq++,
+      time: this.clock,
       envelope,
+      deliverAt,
     });
+    this.queue.push({ kind: "deliver", time: deliverAt, seq: this.taskSeq++, envelope });
   }
 
   private emitDrop(envelope: Envelope, reason: string): void {

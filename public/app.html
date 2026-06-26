@@ -7,6 +7,8 @@
     <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles/theme.css" />
     <link rel="stylesheet" href="/styles/app.css" />
+    <!-- React Flow base styles (loaded from the same CDN as the library). -->
+    <link rel="stylesheet" href="https://esm.sh/reactflow@11.11.4/dist/style.css" />
 
     <!--
       Constellation loads its UI stack as native ES modules from a CDN via this
@@ -20,6 +22,8 @@
           "react": "https://esm.sh/react@18.3.1",
           "react-dom/": "https://esm.sh/react-dom@18.3.1/",
           "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "reactflow": "https://esm.sh/reactflow@11.11.4?external=react,react-dom",
+          "framer-motion": "https://esm.sh/framer-motion@11.3.8?external=react,react-dom",
           "@constellation/engine": "/dist/index.js"
         }
       }

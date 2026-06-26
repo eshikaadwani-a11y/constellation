@@ -101,3 +101,228 @@ body.app {
 .workspace__inner p {
   color: var(--text-secondary);
 }
+
+/* ---- Lab layout ---- */
+
+.lab {
+  display: grid;
+  grid-template-rows: 48px auto 1fr;
+  height: 100vh;
+}
+
+.lab__content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: 0;
+}
+
+.lab__canvas {
+  position: relative;
+  min-width: 0;
+  background: var(--bg-void);
+}
+
+/* ---- Toolbar ---- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+}
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toolbar__field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.toolbar__field select,
+.toolbar__field input {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.toolbar__seed {
+  width: 72px;
+}
+
+.toolbar__count {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  min-width: 20px;
+  text-align: right;
+}
+
+.toolbar__stats {
+  display: flex;
+  gap: var(--space-4);
+  margin-left: auto;
+}
+
+.toolbar__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
+.toolbar__statvalue {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.toolbar__statlabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.btn--full {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+.btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn--danger:hover {
+  background: var(--danger-soft);
+}
+
+/* ---- Custom nodes ---- */
+
+.cnode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--bg-raised);
+  user-select: none;
+}
+
+.cnode__id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.cnode__proto {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+/* ---- Inspector ---- */
+
+.inspector {
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.inspector--empty {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  justify-content: center;
+  text-align: center;
+}
+
+.inspector__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.inspector__id {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.inspector__proto {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.inspector__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.inspector__row span:first-child {
+  color: var(--text-tertiary);
+}
+
+.inspector__statelabel {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.inspector__state {
+  flex: 1;
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-void);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+/* React Flow theme overrides */
+.react-flow__controls button {
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  fill: var(--text-primary);
+}
+
+.react-flow__controls button:hover {
+  background: var(--bg-overlay);
+}

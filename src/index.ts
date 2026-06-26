@@ -13,3 +13,6 @@ export { MinHeap } from "./core/heap.js";
 
 // Simulation engine
 export * from "./engine/index.js";
+
+// Visualization support (deterministic layout + topology model)
+export * from "./topology/index.js";

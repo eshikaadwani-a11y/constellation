@@ -75,6 +75,74 @@ declare module "react-dom/client" {
   export function createRoot(container: Element | DocumentFragment): Root;
 }
 
+// --- React Flow (https://reactflow.dev) -----------------------------------
+// Typed loosely: the graph data we pass in is fully checked by our own model
+// types; React Flow's internal prop surface is treated as opaque.
+declare module "reactflow" {
+  import type { ComponentType, ReactNode } from "react";
+  export interface XYPosition {
+    x: number;
+    y: number;
+  }
+  export interface Node<T = unknown> {
+    id: string;
+    position: XYPosition;
+    data: T;
+    type?: string;
+    selected?: boolean;
+    draggable?: boolean;
+    [key: string]: unknown;
+  }
+  export interface Edge<T = unknown> {
+    id: string;
+    source: string;
+    target: string;
+    type?: string;
+    animated?: boolean;
+    label?: string;
+    data?: T;
+    [key: string]: unknown;
+  }
+  export interface NodeProps<T = unknown> {
+    id: string;
+    data: T;
+    selected: boolean;
+    [key: string]: unknown;
+  }
+  export type NodeTypes = Record<string, ComponentType<NodeProps>>;
+  export type EdgeTypes = Record<string, ComponentType<unknown>>;
+  export type OnNodesChange = (changes: unknown[]) => void;
+  export type OnEdgesChange = (changes: unknown[]) => void;
+
+  export const Background: ComponentType<Record<string, unknown>>;
+  export const Controls: ComponentType<Record<string, unknown>>;
+  export const MiniMap: ComponentType<Record<string, unknown>>;
+  export const Handle: ComponentType<Record<string, unknown>>;
+  export const Position: { Left: "left"; Top: "top"; Right: "right"; Bottom: "bottom" };
+  export const BackgroundVariant: { Dots: "dots"; Lines: "lines"; Cross: "cross" };
+  export const MarkerType: { Arrow: "arrow"; ArrowClosed: "arrowclosed" };
+  export const ReactFlowProvider: ComponentType<{ children?: ReactNode }>;
+
+  export function useNodesState(
+    initial: Node[],
+  ): [Node[], (updater: Node[] | ((prev: Node[]) => Node[])) => void, OnNodesChange];
+  export function useEdgesState(
+    initial: Edge[],
+  ): [Edge[], (updater: Edge[] | ((prev: Edge[]) => Edge[])) => void, OnEdgesChange];
+
+  const ReactFlow: ComponentType<Record<string, unknown>>;
+  export default ReactFlow;
+}
+
+// --- Framer Motion --------------------------------------------------------
+declare module "framer-motion" {
+  import type { ComponentType, ReactNode } from "react";
+  // `motion.<tag>` is an open proxy of animated components; typed as `any` at
+  // this third-party boundary (our own component props remain fully checked).
+  export const motion: any;
+  export const AnimatePresence: ComponentType<{ children?: ReactNode; initial?: boolean }>;
+}
+
 // JSX intrinsic elements are typed loosely: we can't ship the full DOM prop
 // surface without @types/react, but our own components remain fully checked.
 // Declared at top level (this file is an ambient script) so it lands in the

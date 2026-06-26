@@ -23,7 +23,12 @@ export type SimEvent =
   | (Base & { readonly kind: "node:init"; readonly nodeId: NodeId })
   | (Base & { readonly kind: "node:crashed"; readonly nodeId: NodeId })
   | (Base & { readonly kind: "node:restarted"; readonly nodeId: NodeId })
-  | (Base & { readonly kind: "message:sent"; readonly envelope: Envelope })
+  | (Base & {
+      readonly kind: "message:sent";
+      readonly envelope: Envelope;
+      /** Virtual time the message is scheduled to arrive; absent if it was dropped. */
+      readonly deliverAt?: SimTime;
+    })
   | (Base & { readonly kind: "message:delivered"; readonly envelope: Envelope })
   | (Base & {
       readonly kind: "message:dropped";
