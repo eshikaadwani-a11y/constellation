@@ -159,4 +159,19 @@ export class TopologyModel {
   get inFlightCount(): number {
     return this.inFlight.size;
   }
+
+  /**
+   * Rebuilds a model from a snapshot, so folding can resume from a checkpoint
+   * rather than from the beginning of history — the basis for fast replay.
+   */
+  static fromSnapshot(snap: TopologySnapshot): TopologyModel {
+    const model = new TopologyModel();
+    model.time = snap.time;
+    model.delivered = snap.delivered;
+    model.dropped = snap.dropped;
+    for (const n of snap.nodes) model.nodes.set(n.id, { ...n });
+    for (const l of snap.links) model.links.set(l.id, { ...l });
+    for (const f of snap.inFlight) model.inFlight.set(f.id, { ...f });
+    return model;
+  }
 }

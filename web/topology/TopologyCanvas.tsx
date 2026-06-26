@@ -33,12 +33,14 @@ function nodeData(
   sn: TopologySnapshot["nodes"][number],
   now: number,
   accent: string | undefined,
+  simple: boolean,
 ): ProtocolNodeData {
   const base: ProtocolNodeData = {
     label: sn.id,
     protocol: sn.protocol,
     status: sn.status,
     active: sn.status === "up" && now - sn.lastActiveAt <= ACTIVE_WINDOW,
+    simple,
   };
   return accent ? { ...base, accent } : base;
 }
@@ -52,6 +54,7 @@ export function TopologyCanvas({ snapshot, selectedId, onSelect, accentOf }: Pro
 
   useEffect(() => {
     const ids = snapshot.nodes.map((n) => n.id);
+    const large = ids.length > 60; // level-of-detail threshold
 
     // Recompute the circular layout only when the node set changes; otherwise
     // keep positions so user dragging persists.
@@ -71,7 +74,7 @@ export function TopologyCanvas({ snapshot, selectedId, onSelect, accentOf }: Pro
           id: sn.id,
           type: "protocol",
           position,
-          data: nodeData(sn, snapshot.time, accentOf?.(sn.id)),
+          data: nodeData(sn, snapshot.time, accentOf?.(sn.id), large),
           selected: sn.id === selectedId,
         };
       });
@@ -85,7 +88,8 @@ export function TopologyCanvas({ snapshot, selectedId, onSelect, accentOf }: Pro
           id: link.id,
           source: link.source,
           target: link.target,
-          animated: active,
+          // Edge animation is costly at scale; disable it for large clusters.
+          animated: active && !large,
           style: {
             stroke: active ? "var(--primary)" : "var(--border-strong)",
             strokeWidth: active ? 2 : 1,

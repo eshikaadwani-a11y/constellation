@@ -243,6 +243,12 @@ body.app {
   color: var(--text-tertiary);
 }
 
+.cnode--simple {
+  width: 30px;
+  height: 30px;
+  border-width: 1.5px;
+}
+
 /* ---- Inspector ---- */
 
 .inspector {

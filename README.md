@@ -83,13 +83,14 @@ Constellation is being built in the open, milestone by milestone.
 | Raft consensus              | ✅ Implemented |
 | Observability & replay      | ✅ Implemented |
 | Chaos engineering           | ✅ Implemented |
-| Additional protocols        | ⏳ Planned     |
+| Scalability                 | ✅ Implemented |
+| Additional protocols        | ⏳ Next        |
 
-The **chaos framework** schedules faults onto the timeline — crashed nodes, partitions, packet-loss
-storms, latency spikes, and a reproducible "chaos monkey" — sharing the same deterministic clock as
-everything else, so a fault at t=2s recurs identically on every run. Faults surface in the activity
-journal. The lab gains live controls: a packet-loss slider, a chaos-monkey toggle, and per-node
-crash/isolate actions. Partition the Raft leader from the cluster and watch a new term begin.
+**Scalability.** The engine sustains ~0.5–0.8M events/sec single-threaded (`npm run bench`), running
+hundreds of nodes deterministically. Time-travel scales via **checkpointed replay**: periodic folded
+snapshots make seeking O(checkpoint interval) instead of O(history), so scrubbing a 200k-event run is
+instant. The canvas applies level-of-detail above ~60 nodes (lightweight nodes, no per-edge
+animation) and throttles React renders to ~30fps while the engine keeps advancing every frame.
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable

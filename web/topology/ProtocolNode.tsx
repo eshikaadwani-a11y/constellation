@@ -16,6 +16,8 @@ export interface ProtocolNodeData {
   active: boolean;
   /** Optional override colour (e.g. Raft role) supplied by a scenario. */
   accent?: string;
+  /** Lightweight rendering for large clusters (skips per-node animation). */
+  simple?: boolean;
 }
 
 const hiddenHandle = { opacity: 0, width: 1, height: 1, border: "none" } as const;
@@ -23,6 +25,34 @@ const hiddenHandle = { opacity: 0, width: 1, height: 1, border: "none" } as cons
 export function ProtocolNode({ data, selected }: NodeProps<ProtocolNodeData>): JSX.Element {
   const down = data.status === "down";
   const accent = down ? "var(--role-down)" : (data.accent ?? "var(--role-follower)");
+
+  if (data.simple) {
+    // Level-of-detail: a plain disc with no Framer Motion, so hundreds of nodes
+    // stay smooth.
+    return (
+      <>
+        <Handle type="target" position={Position.Top} style={hiddenHandle} isConnectable={false} />
+        <div
+          className="cnode cnode--simple"
+          style={{
+            borderColor: selected ? "var(--text-primary)" : accent,
+            opacity: down ? 0.5 : 1,
+            boxShadow: data.active ? `0 0 10px ${accent}` : "none",
+          }}
+        >
+          <span className="cnode__id" style={{ color: accent }}>
+            {data.label}
+          </span>
+        </div>
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          style={hiddenHandle}
+          isConnectable={false}
+        />
+      </>
+    );
+  }
 
   return (
     <>

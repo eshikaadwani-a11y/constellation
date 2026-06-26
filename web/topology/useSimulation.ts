@@ -15,7 +15,10 @@ import {
   Random,
   Simulation,
   TopologyModel,
+  buildCheckpoints,
+  replayTopologyAt,
   uniformLatency,
+  type TopologyCheckpoint,
   type TopologySnapshot,
 } from "@constellation/engine";
 import { scenarioById } from "../scenarios.js";
@@ -106,12 +109,6 @@ function createEngine(scenarioId: string, nodeCount: number, seed: number): Engi
   };
 }
 
-function snapshotAt(recorder: EventRecorder, time: number): TopologySnapshot {
-  const model = new TopologyModel();
-  for (const e of recorder.until(time)) model.apply(e);
-  return model.snapshot();
-}
-
 export function useSimulation(initialScenario = "raft"): SimController {
   const initial = scenarioById(initialScenario);
   const [config, setConfig] = useState({
@@ -157,6 +154,7 @@ export function useSimulation(initialScenario = "raft"): SimController {
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
+    let lastRender = 0;
     const tick = (now: number): void => {
       const engine = engineRef.current;
       if (engine && playingRef.current && reviewRef.current === null) {
@@ -177,8 +175,13 @@ export function useSimulation(initialScenario = "raft"): SimController {
               monkeyNextRef.current = engine.sim.now + 3500;
             }
           }
-          setLiveSnapshot(engine.model.snapshot());
-          setVersion((v) => v + 1);
+          // Throttle React renders to ~30fps; the engine still advances every
+          // frame, but large clusters don't need 60fps DOM churn.
+          if (now - lastRender >= 33) {
+            lastRender = now;
+            setLiveSnapshot(engine.model.snapshot());
+            setVersion((v) => v + 1);
+          }
         }
       }
       last = now;
@@ -265,10 +268,20 @@ export function useSimulation(initialScenario = "raft"): SimController {
   }, []);
 
   const recorder = engineRef.current?.recorder ?? new EventRecorder();
-  const displaySnapshot = useMemo(
-    () => (reviewTime === null ? liveSnapshot : snapshotAt(recorder, reviewTime)),
-    [reviewTime, liveSnapshot, recorder, version],
-  );
+  const checkpointsRef = useRef<{ len: number; checkpoints: TopologyCheckpoint[] }>({
+    len: -1,
+    checkpoints: [],
+  });
+  const displaySnapshot = useMemo(() => {
+    if (reviewTime === null) return liveSnapshot;
+    const events = recorder.all();
+    // Build checkpoints once per review session (history is frozen while
+    // paused), so each scrub is O(checkpoint interval) rather than O(history).
+    if (checkpointsRef.current.len !== events.length) {
+      checkpointsRef.current = { len: events.length, checkpoints: buildCheckpoints(events, 3000) };
+    }
+    return replayTopologyAt(events, checkpointsRef.current.checkpoints, reviewTime);
+  }, [reviewTime, liveSnapshot, recorder, version]);
 
   const stats: SimStats = {
     events: engineRef.current?.sim.eventCount ?? 0,

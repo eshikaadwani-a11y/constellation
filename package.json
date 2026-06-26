@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "test": "npm run build:engine && node --test \"dist/**/*.test.js\"",
     "serve": "node scripts/serve.mjs",
-    "dev": "npm run build && npm run serve"
+    "dev": "npm run build && npm run serve",
+    "bench": "npm run build:engine && node scripts/bench.mjs"
   },
   "keywords": [
     "distributed-systems",

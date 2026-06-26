@@ -137,7 +137,7 @@ export const SCENARIOS: Scenario[] = [
     description: "One node starts with a rumor; watch it spread across the cluster.",
     defaultNodes: 10,
     minNodes: 4,
-    maxNodes: 30,
+    maxNodes: 80,
     populate(sim, nodeCount) {
       ids(nodeCount).forEach((id, i) => sim.addNode(id, gossipNode(i === 0)));
     },
