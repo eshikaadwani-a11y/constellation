@@ -1,0 +1,148 @@
+/*
+ * Constellation design system.
+ *
+ * A single source of truth for colour, type, spacing, and motion. The palette
+ * is a deep "observatory" dark theme: near-black backgrounds with a cool blue
+ * primary and a warm amber accent for live activity, tuned for long sessions
+ * staring at topology graphs and telemetry.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — layered from the void upward. */
+  --bg-void: #05060a;
+  --bg-base: #0a0c12;
+  --bg-surface: #0f121b;
+  --bg-raised: #151926;
+  --bg-overlay: #1b2030;
+
+  /* Borders & hairlines. */
+  --border-subtle: #1c2130;
+  --border-default: #272d40;
+  --border-strong: #38405a;
+
+  /* Text. */
+  --text-primary: #eef1f8;
+  --text-secondary: #aab2c5;
+  --text-tertiary: #6b7385;
+  --text-disabled: #454c5e;
+
+  /* Brand & semantic. */
+  --primary: #5b8cff;
+  --primary-strong: #3d6dff;
+  --primary-soft: rgba(91, 140, 255, 0.14);
+  --accent: #ffb347;
+  --accent-soft: rgba(255, 179, 71, 0.14);
+
+  --success: #3ad29f;
+  --success-soft: rgba(58, 210, 159, 0.14);
+  --warning: #ffce5c;
+  --danger: #ff5c7c;
+  --danger-soft: rgba(255, 92, 124, 0.14);
+  --info: #5bd6ff;
+
+  /* Node-role colours used across the topology and legends. */
+  --role-leader: #ffb347;
+  --role-follower: #5b8cff;
+  --role-candidate: #b07bff;
+  --role-down: #ff5c7c;
+
+  /* Typography. */
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:
+    "JetBrains Mono", "SFMono-Regular", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: 3.75rem;
+
+  /* Spacing scale (4px base). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --space-12: 96px;
+
+  /* Radii. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* Elevation. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --glow-primary: 0 0 0 1px rgba(91, 140, 255, 0.4), 0 0 24px rgba(91, 140, 255, 0.25);
+
+  /* Motion. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --dur-slow: 420ms;
+
+  --maxw-content: 1180px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--primary-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

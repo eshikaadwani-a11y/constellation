@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "rootDir": "web",
+    "outDir": "dist/web",
+    "declaration": false,
+    "sourceMap": true,
+    "newLine": "lf",
+    "types": [],
+
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+
+    "paths": {
+      "@constellation/engine": ["./dist/index.d.ts"],
+      "@constellation/engine/*": ["./dist/*"]
+    }
+  },
+  "include": ["web/**/*.ts", "web/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

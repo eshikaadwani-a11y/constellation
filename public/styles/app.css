@@ -1,0 +1,103 @@
+/* The laboratory shell. */
+
+html,
+body {
+  height: 100%;
+}
+
+body.app {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-void);
+}
+
+/* ---- Boot state (shown until React mounts) ---- */
+
+.boot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  height: 100vh;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Shell ---- */
+
+.shell {
+  display: grid;
+  grid-template-rows: 48px 1fr;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+}
+
+.topbar__left,
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.topbar__ws {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.workspace {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  text-align: center;
+  background:
+    radial-gradient(900px 500px at 50% 0%, rgba(91, 140, 255, 0.08), transparent), var(--bg-void);
+}
+
+.workspace__inner {
+  max-width: 520px;
+  padding: var(--space-6);
+}
+
+.workspace__inner h2 {
+  font-size: var(--text-lg);
+  margin: 0 0 var(--space-3);
+}
+
+.workspace__inner p {
+  color: var(--text-secondary);
+}

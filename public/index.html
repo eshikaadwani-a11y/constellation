@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Constellation — See distributed systems think</title>
+    <meta
+      name="description"
+      content="An interactive laboratory for building, visualizing, and stress-testing distributed systems. Watch consensus, replication, and chaos unfold in real time."
+    />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles/theme.css" />
+    <link rel="stylesheet" href="/styles/landing.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <a class="nav__brand" href="/">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="6" r="3" fill="#5b8cff" />
+          <circle cx="6" cy="22" r="3" fill="#ffb347" />
+          <circle cx="26" cy="22" r="3" fill="#b07bff" />
+          <path d="M16 6 L6 22 M16 6 L26 22 M6 22 L26 22" stroke="#38405a" stroke-width="1.5" />
+        </svg>
+        <span>Constellation</span>
+      </a>
+      <div class="nav__links">
+        <a href="#features">Features</a>
+        <a href="#engine">Engine</a>
+        <a href="https://github.com/eshikaadwani-a11y/constellation/tree/main/docs">Docs</a>
+        <a href="https://github.com/eshikaadwani-a11y/constellation" target="_blank" rel="noopener"
+          >GitHub</a
+        >
+        <a class="btn btn--primary" href="/app.html">Launch the Lab</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <canvas id="starfield" aria-hidden="true"></canvas>
+      <div class="hero__inner">
+        <span class="hero__badge"
+          ><span class="dot"></span> Deterministic. Reproducible. Open source.</span
+        >
+        <h1>See distributed systems <span class="grad">actually think</span></h1>
+        <p class="lede">
+          Every backend engineer knows the theory. Almost no one can watch it run. Constellation is
+          an interactive laboratory where you build clusters, inject failures, and watch consensus,
+          replication, and chaos unfold packet by packet — in real time.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary btn--lg" href="/app.html">Open the Laboratory</a>
+          <a class="btn btn--lg" href="#engine">How the engine works</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="section" id="features">
+      <div class="section__eyebrow">The laboratory</div>
+      <h2 class="section__title">Not a dashboard. An engineering instrument.</h2>
+      <p class="section__sub">
+        Constellation pairs a deterministic discrete-event simulation core with a custom topology
+        renderer and a full observability stack — so you can reason about behaviour you would
+        normally only read about.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <div class="card__icon">◈</div>
+          <h3>Deterministic engine</h3>
+          <p>
+            A virtual-clock, event-driven core. Every run is a pure function of one seed, so any
+            outcome can be reproduced and replayed exactly.
+          </p>
+        </article>
+        <article class="card">
+          <div class="card__icon">⊹</div>
+          <h3>Live topology</h3>
+          <p>
+            A hand-built graph engine renders nodes, links, and in-flight messages at 60fps — no
+            framework, no black box.
+          </p>
+        </article>
+        <article class="card">
+          <div class="card__icon">⚡</div>
+          <h3>Real protocols</h3>
+          <p>
+            Raft consensus, gossip, vector clocks, and consistent hashing — implemented for real,
+            not faked, and verified by tests.
+          </p>
+        </article>
+        <article class="card">
+          <div class="card__icon">🜂</div>
+          <h3>Chaos engineering</h3>
+          <p>
+            Partition the network, crash leaders, add latency and packet loss, then watch the
+            protocol fight to stay correct.
+          </p>
+        </article>
+        <article class="card">
+          <div class="card__icon">◷</div>
+          <h3>Time-travel observability</h3>
+          <p>
+            Metrics, structured logs, and distributed traces stream from the engine. Scrub the
+            timeline to any moment and inspect every event.
+          </p>
+        </article>
+        <article class="card">
+          <div class="card__icon">✦</div>
+          <h3>Explains itself</h3>
+          <p>
+            A built-in tutor narrates why the system behaved as it did — turning every simulation
+            into a lesson you can actually feel.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="engine">
+      <div class="section__eyebrow">Under the hood</div>
+      <h2 class="section__title">A pure, isomorphic core you can read</h2>
+      <p class="section__sub">
+        The same TypeScript that drives the browser runs the test suite in Node. No hidden state, no
+        wall-clock racing — just a scheduler, a seeded RNG, and a network you control.
+      </p>
+      <div class="code-window">
+        <div class="code-window__bar">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span style="margin-left: 8px; color: var(--text-tertiary); font-size: 13px"
+            >constellation.ts</span
+          >
+        </div>
+        <pre><span class="tok-com">// Spin up a five-node Raft cluster and watch it elect a leader.</span>
+<span class="tok-key">const</span> sim = <span class="tok-key">new</span> <span class="tok-fn">Simulation</span>({ seed: <span class="tok-num">42</span> });
+<span class="tok-key">const</span> cluster = <span class="tok-fn">raftCluster</span>(sim, { nodes: <span class="tok-num">5</span> });
+
+<span class="tok-com">// Inject a network partition at t = 2s, heal it at t = 6s.</span>
+sim.chaos.<span class="tok-fn">partition</span>([<span class="tok-str">"n1"</span>, <span class="tok-str">"n2"</span>], { at: <span class="tok-num">2000</span>, until: <span class="tok-num">6000</span> });
+
+sim.<span class="tok-fn">run</span>({ until: <span class="tok-num">10000</span> });
+
+console.<span class="tok-fn">log</span>(cluster.<span class="tok-fn">leader</span>());  <span class="tok-com">// → "n4" (term 3)</span></pre>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat__value">0</div>
+          <div class="stat__label">Runtime dependencies</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">100%</div>
+          <div class="stat__label">Deterministic replay</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">TypeScript</div>
+          <div class="stat__label">End to end</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">MIT</div>
+          <div class="stat__label">Open source</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <div>Constellation — an interactive distributed systems laboratory.</div>
+        <div>Built with zero dependencies. MIT licensed.</div>
+      </div>
+    </footer>
+
+    <script type="module" src="/dist/web/landing.js"></script>
+  </body>
+</html>

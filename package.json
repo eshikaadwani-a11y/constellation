@@ -1,0 +1,33 @@
+{
+  "name": "constellation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An interactive laboratory for building, visualizing, and stress-testing distributed systems.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:engine": "tsc -p tsconfig.json",
+    "build:web": "tsc -p tsconfig.web.json",
+    "build": "npm run build:engine && npm run build:web",
+    "clean": "node scripts/clean.mjs",
+    "typecheck": "npm run build:engine && tsc -p tsconfig.web.json --noEmit",
+    "lint": "prettier --check . && npm run typecheck",
+    "format": "prettier --write .",
+    "test": "npm run build:engine && node --test \"dist/**/*.test.js\"",
+    "serve": "node scripts/serve.mjs",
+    "dev": "npm run build && npm run serve"
+  },
+  "keywords": [
+    "distributed-systems",
+    "consensus",
+    "raft",
+    "simulation",
+    "visualization",
+    "chaos-engineering",
+    "observability",
+    "education"
+  ]
+}
