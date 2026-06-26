@@ -20,9 +20,26 @@ const LOGO = (
 );
 
 export function LabView(): JSX.Element {
-  const sim = useSimulation("ring");
+  const sim = useSimulation("raft");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const scenario = scenarioById(sim.scenarioId);
+
+  // Colour Raft nodes by role (leader / candidate / follower); other protocols
+  // fall back to the default node colour.
+  const accentOf = (id: string): string | undefined => {
+    const state = sim.stateOf(id) as { role?: string } | undefined;
+    switch (state?.role) {
+      case "leader":
+        return "var(--role-leader)";
+      case "candidate":
+        return "var(--role-candidate)";
+      case "follower":
+        return "var(--role-follower)";
+      default:
+        return undefined;
+    }
+  };
+  const isRaft = sim.scenarioId === "raft";
 
   // Keyboard shortcuts: space toggles playback, "s" single-steps.
   useEffect(() => {
@@ -68,7 +85,24 @@ export function LabView(): JSX.Element {
             snapshot={sim.snapshot}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            accentOf={accentOf}
           />
+          {isRaft && (
+            <div className="legend">
+              <span>
+                <i style={{ background: "var(--role-leader)" }} /> leader
+              </span>
+              <span>
+                <i style={{ background: "var(--role-candidate)" }} /> candidate
+              </span>
+              <span>
+                <i style={{ background: "var(--role-follower)" }} /> follower
+              </span>
+              <span>
+                <i style={{ background: "var(--role-down)" }} /> crashed
+              </span>
+            </div>
+          )}
         </div>
         <Inspector
           snapshot={sim.snapshot}

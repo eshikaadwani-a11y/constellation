@@ -7,7 +7,7 @@
  * own milestones; these exist to exercise the visualization with real,
  * deterministic message flow.
  */
-import { Simulation, type Message, type NodeId, type Protocol } from "@constellation/engine";
+import { Simulation, raft, type Message, type NodeId, type Protocol } from "@constellation/engine";
 
 export interface Scenario {
   readonly id: string;
@@ -93,6 +93,28 @@ function heartbeatNode(): Protocol<{ beats: number }, Message> {
 }
 
 export const SCENARIOS: Scenario[] = [
+  {
+    id: "raft",
+    name: "Raft consensus",
+    description: "Leader election and log replication. Crash the leader and watch a new one rise.",
+    defaultNodes: 5,
+    minNodes: 3,
+    maxNodes: 9,
+    populate(sim, nodeCount) {
+      // Election timeouts are tuned well above the network round-trip so
+      // elections are stable under the lab's 40–140ms link latency.
+      const opts = { electionTimeoutMin: 800, electionTimeoutMax: 1500, heartbeatInterval: 250 };
+      ids(nodeCount).forEach((id) => sim.addNode(id, raft(opts)));
+      // A trickle of client commands so the replicated log grows on screen.
+      let k = 0;
+      const propose = (): void => {
+        sim.inject("n1", { type: "propose", command: `set x=${k}` }, "client");
+        k += 1;
+        sim.schedule(2200, propose);
+      };
+      sim.schedule(2500, propose);
+    },
+  },
   {
     id: "ring",
     name: "Token ring",

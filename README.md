@@ -80,16 +80,17 @@ Constellation is being built in the open, milestone by milestone.
 | Simulation engine           | ✅ Implemented |
 | Topology visualization      | ✅ Implemented |
 | Networking layer            | ✅ Implemented |
-| Raft consensus              | 🚧 Next        |
-| Observability & replay      | ⏳ Planned     |
+| Raft consensus              | ✅ Implemented |
+| Observability & replay      | 🚧 Next        |
 | Chaos engineering           | ⏳ Planned     |
 | Additional protocols        | ⏳ Planned     |
 
-The **networking layer** sits between `ctx.send` and delivery: a `Network` transport with pluggable
-latency distributions (constant, uniform, normal, exponential), independent packet loss, and
-time-windowed partitions — all deterministic. Reordering falls out naturally from per-message
-latency, and retries are demonstrated by a reliable-delivery protocol that rides on top of a 60%-loss
-link and still gets through. All of it is unit tested.
+**Raft consensus** is implemented as a single `Protocol` — randomized-timeout leader election, log
+replication with the consistency check, majority commitment, and the full term machinery. The test
+suite verifies the paper's safety properties (at most one leader per term, identical logs across the
+cluster) and liveness (a new leader is elected within bounded time after the leader crashes). In the
+lab it ships as the default scenario, with nodes coloured by role — crash the leader and watch a new
+one rise. See [`docs/raft.md`](docs/raft.md).
 
 The deterministic **simulation engine** is implemented and tested: a virtual-clock, event-driven
 scheduler with a pluggable protocol contract, per-node deterministic RNG streams, an observable

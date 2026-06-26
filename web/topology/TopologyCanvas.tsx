@@ -25,18 +25,25 @@ interface Props {
   snapshot: TopologySnapshot;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** Optional per-node accent colour (e.g. Raft role). */
+  accentOf?: (id: string) => string | undefined;
 }
 
-function nodeData(sn: TopologySnapshot["nodes"][number], now: number): ProtocolNodeData {
-  return {
+function nodeData(
+  sn: TopologySnapshot["nodes"][number],
+  now: number,
+  accent: string | undefined,
+): ProtocolNodeData {
+  const base: ProtocolNodeData = {
     label: sn.id,
     protocol: sn.protocol,
     status: sn.status,
     active: sn.status === "up" && now - sn.lastActiveAt <= ACTIVE_WINDOW,
   };
+  return accent ? { ...base, accent } : base;
 }
 
-export function TopologyCanvas({ snapshot, selectedId, onSelect }: Props): JSX.Element {
+export function TopologyCanvas({ snapshot, selectedId, onSelect, accentOf }: Props): JSX.Element {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const layoutRef = useRef<Map<string, { x: number; y: number }>>(new Map());
@@ -64,7 +71,7 @@ export function TopologyCanvas({ snapshot, selectedId, onSelect }: Props): JSX.E
           id: sn.id,
           type: "protocol",
           position,
-          data: nodeData(sn, snapshot.time),
+          data: nodeData(sn, snapshot.time, accentOf?.(sn.id)),
           selected: sn.id === selectedId,
         };
       });
@@ -87,7 +94,7 @@ export function TopologyCanvas({ snapshot, selectedId, onSelect }: Props): JSX.E
         };
       }),
     );
-  }, [snapshot, selectedId, setNodes, setEdges]);
+  }, [snapshot, selectedId, accentOf, setNodes, setEdges]);
 
   return (
     <ReactFlow

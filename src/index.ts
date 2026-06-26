@@ -17,5 +17,8 @@ export * from "./engine/index.js";
 // Networking layer
 export * from "./network/index.js";
 
+// Distributed protocol library
+export * from "./protocols/index.js";
+
 // Visualization support (deterministic layout + topology model)
 export * from "./topology/index.js";
